@@ -1,0 +1,119 @@
+<UserControl x:Class="SmartX.Client.Views.TelemetryDashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:SmartX.Client.Converters"
+             Background="#0B1220">
+
+    <UserControl.Resources>
+        <conv:AnomalyBackgroundConverter x:Key="AnomalyBackgroundConverter"/>
+    </UserControl.Resources>
+
+    <Grid Margin="16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="340"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <ScrollViewer Grid.Column="0" Margin="0,0,16,0" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+
+                <TextBlock Text="Register Sensor" FontWeight="Bold" FontSize="16" Foreground="White" Margin="0,0,0,8"/>
+
+                <TextBlock Text="Device MAC / Unique ID" Foreground="#94A3B8" FontSize="11"/>
+                <TextBox Text="{Binding NewMac, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8" Padding="4"/>
+
+                <TextBlock Text="Deployment Location (Room / Zone / Node)" Foreground="#94A3B8" FontSize="11"/>
+                <TextBox Text="{Binding NewLocation, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8" Padding="4"/>
+
+                <TextBlock Text="Sensor Category" Foreground="#94A3B8" FontSize="11"/>
+                <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding NewCategory}" Margin="0,2,0,12"/>
+
+                <Button Content="Register Sensor" Command="{Binding RegisterSensorCommand}" Height="34"
+                        Style="{StaticResource PillarButton}" Margin="0,0,0,20"/>
+
+                <Border BorderBrush="#334155" BorderThickness="0,1,0,0" Margin="0,0,0,16"/>
+
+                <TextBlock Text="Attach File to Selected Sensor" FontWeight="Bold" FontSize="16" Foreground="White" Margin="0,0,0,8"/>
+                <TextBlock Text="Config file, hardware log, or deployment photo" Foreground="#94A3B8" FontSize="11" Margin="0,0,0,8"/>
+                <Button Content="Attach File..." Command="{Binding AttachFileCommand}" Height="34"
+                        Style="{StaticResource PillarButton}" Margin="0,0,0,20"/>
+
+                <Border BorderBrush="#334155" BorderThickness="0,1,0,0" Margin="0,0,0,16"/>
+
+                <TextBlock Text="Deployment Tree Validator (recursive)" FontWeight="Bold" FontSize="16" Foreground="White" Margin="0,0,0,8"/>
+                <TextBlock Text="One node per line, indent with spaces to nest. Device leaves start with NODE." Foreground="#94A3B8" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                <TextBox Text="{Binding DeploymentTreeText, UpdateSourceTrigger=PropertyChanged}"
+                         AcceptsReturn="True" FontFamily="Consolas" FontSize="12"
+                         Height="120" Margin="0,0,0,8" Padding="4"/>
+                <Button Content="Validate" Command="{Binding ValidateDeploymentCommand}" Height="34"
+                        Style="{StaticResource PillarButton}" Margin="0,0,0,8"/>
+                <TextBlock Text="{Binding ValidationResult}" Foreground="#38BDF8" TextWrapping="Wrap" Margin="0,0,0,20"/>
+
+                <TextBlock Text="{Binding StatusMessage}" Foreground="#64748B" FontSize="11" TextWrapping="Wrap"/>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <DockPanel Grid.Column="1">
+
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
+                <TextBlock Text="Live Telemetry" FontWeight="Bold" FontSize="18" Foreground="White"
+                           VerticalAlignment="Center" Margin="0,0,20,0"/>
+                <CheckBox Content="Simulate readings" IsChecked="{Binding IsSimulating}"
+                          Foreground="#94A3B8" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ListBox ItemsSource="{Binding Sensors}" SelectedItem="{Binding SelectedSensor}"
+                         Background="Transparent" BorderThickness="0">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="#334155" BorderThickness="1" CornerRadius="6"
+                                    Margin="0,0,0,10" Padding="14"
+                                    Background="{Binding IsAnomalous, Converter={StaticResource AnomalyBackgroundConverter}}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="200"/>
+                                        <ColumnDefinition Width="230"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Ellipse Grid.Column="0" Width="14" Height="14" Fill="{Binding StatusBrush}"
+                                             VerticalAlignment="Center" Margin="0,0,14,0"/>
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding MacAddress}" FontWeight="Bold" Foreground="White"/>
+                                        <TextBlock Text="{Binding Location}" Foreground="#94A3B8" FontSize="11"/>
+                                        <TextBlock Text="{Binding Category}" Foreground="#64748B" FontSize="11"/>
+                                    </StackPanel>
+
+                                    <Canvas Grid.Column="2" Width="220" Height="48" Background="#0F172A">
+                                        <Polyline Points="{Binding UpperBand}" Stroke="#F59E0B" StrokeThickness="1" StrokeDashArray="2,2"/>
+                                        <Polyline Points="{Binding LowerBand}" Stroke="#F59E0B" StrokeThickness="1" StrokeDashArray="2,2"/>
+                                        <Polyline Points="{Binding Sparkline}" Stroke="#38BDF8" StrokeThickness="2"/>
+                                    </Canvas>
+
+                                    <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="14,0,0,0">
+                                        <TextBlock Text="{Binding LastValue, StringFormat={}{0:0.0}}"
+                                                   FontWeight="Bold" Foreground="White" HorizontalAlignment="Right"/>
+                                        <TextBlock Text="{Binding Status}" Foreground="#94A3B8" FontSize="11" HorizontalAlignment="Right"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </ScrollViewer>
+
+        </DockPanel>
+    </Grid>
+</UserControl>
